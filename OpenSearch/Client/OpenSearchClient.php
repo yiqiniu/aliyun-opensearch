@@ -36,7 +36,7 @@ class OpenSearchClient extends OpenSearch {
     const API_VERSION = '3';
     const API_TYPE = 'openapi';
 
-    const SDK_VERSION = '3.1.0';
+    const SDK_VERSION = '3.2.1';
     const SDK_TYPE    = 'opensearch_sdk';
 
     private $debug = false;
@@ -290,9 +290,6 @@ class OpenSearchClient extends OpenSearch {
         $session = curl_init($url);
         curl_setopt_array($session, $options);
         $response = curl_exec($session);
-        if ($response === false) {
-            throw new \Exception(curl_error($session), curl_errno($session));
-        }
         curl_close($session);
 
         $openSearchResult = new OpenSearchResult();
