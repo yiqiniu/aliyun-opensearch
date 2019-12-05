@@ -1,6 +1,6 @@
 {
-    "name": "tomcao/opensearch",
-	"description": "Aliyun OSS SDK for PHP",
+    "name": "yiqiniu/opensearch",
+	"description": "Aliyun  Open Search SDK for PHP",
 	"homepage": "https://www.aliyun.com/product/opensearch",
 	"type": "library",
 	"license": "MIT",
