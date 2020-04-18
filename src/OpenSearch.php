@@ -1,7 +1,7 @@
 <?php
 
 
-namespace yiqiniu;
+namespace yiqiniu\sdk_search;
 
 
 use Exception;
@@ -71,19 +71,17 @@ class OpenSearch
     }
 
     /**
-     * 开始搜索
-     * @param string $keyword 关键字
-     * @param array  $option
-     * @return array
+     * 执行搜索动作
+     * @param       $keyword
+     * @param array $option
+     * @return array|mixed
      * @throws Exception
      */
-    public function search($keyword, $option = [])
+    private function searchAction($keyword, $option = [])
     {
         if (empty($keyword)) {
             return [];
         }
-
-
         try {
             $client = $this->getClient();
 
@@ -91,8 +89,14 @@ class OpenSearch
 
             $params = new SearchParamsBuilder();
             $params->setAppName($this->config['appName']);
-            $params->setStart($option['page'] * $option['page_size']);
-            $params->setHits($option['page_size']);
+            if (isset($option['page_size'])) {
+                $params->setHits($option['page_size']);
+            } else {
+                $params->setHits(100);
+            }
+            if (isset($option['page'], $option['page_size'])) {
+                $params->setStart($option['page'] * $option['page_size']);
+            }
             $params->setQuery("default:'$keyword'");
             $params->setFormat('json');
             if (!empty($this->config['queryProcessor'])) {
@@ -100,24 +104,22 @@ class OpenSearch
             }
             //查询条件
             //$params->setFilter('sh=1');
-            if (!empty($option['filter'])) {
-
-                if (is_array($option['filter'])) {
+            if (!empty($option['where'])) {
+                if (is_array($option['where'])) {
                     $wheres = array_map(function ($item) {
                         return implode('', $item);
-                    }, $option['filter']);
-                    $option['filter'] = implode(' AND ', $wheres);
+                    }, $option['where']);
+                    $option['where'] = implode(' AND ', $wheres);
                 }
-                $option['filter'] = str_replace('<>', '!=', $option['filter']);
-                $params->setFilter($option['filter']);
+                $params->setFilter(str_replace('<>', '!=', $option['where']));
             }
             // 返回字段
             //$params->setFetchFields(['id','title','classid']);
-            if (!empty($options['fetch_fields'])) {
-                if (is_array($options['fetch_fields'])) {
-                    $params->setFetchFields($option['fetch_fields']);
+            if (!empty($option['fields'])) {
+                if (is_array($option['fields'])) {
+                    $params->setFetchFields($option['fields']);
                 } else {
-                    $params->setFetchFields(explode(',', $option['fetch_fields']));
+                    $params->setFetchFields(explode(',', $option['fields']));
                 }
             }
             // 添加排序
@@ -137,7 +139,23 @@ class OpenSearch
             //  $build = $params->build();
             $ret = $searchClient->execute($params->build())->result;
 
-            $json = json_decode($ret, true);
+            return json_decode($ret, true);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * 按页返回
+     * @param string $keyword 关键字
+     * @param array  $option
+     * @return array
+     * @throws Exception
+     */
+    public function search_page($keyword, $option = [])
+    {
+        try {
+            $json = $this->searchAction($keyword, $option);
             if (isset($json['result'], $json['result']['items'])) {
 
                 if ($json['result']['total'] < 1) {
@@ -156,18 +174,44 @@ class OpenSearch
     }
 
     /**
-     * 只返回ID
-     * @param $keyword
-     * @param $option
-     * @return array
+     * 搜索前100个
+     * 通过pagesize来设置
+     * @param       $keyword
+     * @param array $option
+     * @return array|mixed
      * @throws Exception
      */
-    public function search_mini($keyword, $option)
+    public function search_list($keyword, $option = [])
     {
-        $option['fetchFields'] = ['id', 'title'];
-        $option['page_size'] = 300;
-        $option['page'] = 0;
-        return $this->search($keyword, $option);
+        try {
+            if (!isset($option['page_size'])) {
+                $option['page_size'] = 100;
+                $option['page'] = 0;
+            }
+            $json = $this->searchAction($keyword, $option);
+            if (isset($json['result'], $json['result']['items'])) {
+                return $json['result']['items'];
+            }
+            return [];
+        } catch (Exception $e) {
+            throw  $e;
+        }
     }
 
+    /**
+     * 获取查询后原始数据
+     * @param       $keyword
+     * @param array $option
+     * @return array|mixed
+     * @throws Exception
+     */
+    public function search($keyword, $option = [])
+    {
+        try {
+            return $this->searchAction($keyword, $option);
+
+        } catch (Exception $e) {
+            throw  $e;
+        }
+    }
 }
