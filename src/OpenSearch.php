@@ -158,10 +158,15 @@ class OpenSearch
             $json = $this->searchAction($keyword, $option);
             if (isset($json['result'], $json['result']['items'])) {
 
-                if(($json['result']['total'] <=$option['page_size']) || $json['result']['total']<1){
+                if (($json['result']['total'] <= $option['page_size']) || $json['result']['total'] < 1) {
                     $list['hasmore'] = false;
-                }else{
-                    $list['hasmore'] = $json['result']['num'] == $option['page_size'];
+                } else {
+                    $page = ceil($json['result']['total'] / $option['page_size']);
+                    if ($json['result']['num'] < $option['page_size'] || $page == $option['page']) {
+                        $list['hasmore'] = false;
+                    } else {
+                        $list['hasmore'] = true;
+                    }
                 }
                 $list['list'] = $json['result']['items'];
                 return $list;
