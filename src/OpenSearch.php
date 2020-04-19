@@ -102,6 +102,8 @@ class OpenSearch
             if (!empty($this->config['queryProcessor'])) {
                 $params->addQueryProcessor($this->config['queryProcessor']);
             }
+
+
             //查询条件
             //$params->setFilter('sh=1');
             if (!empty($option['where'])) {
