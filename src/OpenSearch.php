@@ -158,9 +158,9 @@ class OpenSearch
             $json = $this->searchAction($keyword, $option);
             if (isset($json['result'], $json['result']['items'])) {
 
-                if ($json['result']['total'] < 1) {
+                if(($json['result']['total'] <=$option['page_size']) || $json['result']['total']<1){
                     $list['hasmore'] = false;
-                } else {
+                }else{
                     $list['hasmore'] = $json['result']['num'] == $option['page_size'];
                 }
                 $list['list'] = $json['result']['items'];
