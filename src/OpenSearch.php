@@ -95,7 +95,9 @@ class OpenSearch
                 $params->setHits(100);
             }
             if (isset($option['page'], $option['page_size'])) {
-                $params->setStart($option['page'] * $option['page_size']);
+                // 默认从0页开始
+                $page = $option['page'] > 0 ? $option['page'] - 1 : 0;
+                $params->setStart($page * $option['page_size']);
             }
             $params->setQuery("default:'$keyword'");
             $params->setFormat('json');
@@ -160,10 +162,15 @@ class OpenSearch
             $json = $this->searchAction($keyword, $option);
             if (isset($json['result'], $json['result']['items'])) {
 
-                if ($json['result']['total'] < 1) {
+                if (($json['result']['total'] <= $option['page_size']) || $json['result']['total'] < 1) {
                     $list['hasmore'] = false;
                 } else {
-                    $list['hasmore'] = $json['result']['num'] == $option['page_size'];
+                    $page = ceil($json['result']['total'] / $option['page_size']);
+                    if ($json['result']['num'] < $option['page_size'] || $page == $option['page']) {
+                        $list['hasmore'] = false;
+                    } else {
+                        $list['hasmore'] = true;
+                    }
                 }
                 $list['list'] = $json['result']['items'];
                 return $list;
