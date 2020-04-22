@@ -95,7 +95,9 @@ class OpenSearch
                 $params->setHits(100);
             }
             if (isset($option['page'], $option['page_size'])) {
-                $params->setStart($option['page'] * $option['page_size']);
+                // 默认从0页开始
+                $page = $option['page'] > 0 ? $option['page'] - 1 : 0;
+                $params->setStart($page * $option['page_size']);
             }
             $params->setQuery("default:'$keyword'");
             $params->setFormat('json');
