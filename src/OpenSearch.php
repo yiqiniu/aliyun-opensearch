@@ -108,10 +108,32 @@ class OpenSearch
             //$params->setFilter('sh=1');
             if (!empty($option['where'])) {
                 if (is_array($option['where'])) {
-                    $wheres=[];
-                    foreach ($option['where'] as $item){
-                        if(is_array($item)){
-                            $wheres[]= implode('', $item);
+                    $wheres = [];
+                    foreach ($option['where'] as $item) {
+                        if (count($item) !== 3) {
+                            continue;
+                        }
+                        $op = str_replace(' ', '', strtolower($item[1]));
+                        switch ($op) {
+                            case '>':
+                            case '<':
+                            case '=':
+                            case '>=':
+                            case '<=':
+                            case '!=':
+                                $wheres[] = implode('', $item);
+                                break;
+                            case '<>':
+                                $item[1] = '!=';
+                                $wheres[] = implode('', $item);
+                                break;
+                            case 'in':
+                            case 'notin':
+                                if (!is_array($item[2])) {
+                                    $item[2] = explode(',', $item[2]);
+                                }
+                                $wheres[] = sprintf("%s(%s,\"%s\")", $op, $item[0], implode('|', $item[2]));
+                                break;
                         }
                     }
                     $option['where'] = implode(' AND ', $wheres);
