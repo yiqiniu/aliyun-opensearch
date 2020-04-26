@@ -108,9 +108,12 @@ class OpenSearch
             //$params->setFilter('sh=1');
             if (!empty($option['where'])) {
                 if (is_array($option['where'])) {
-                    $wheres = array_map(function ($item) {
-                        return implode('', $item);
-                    }, $option['where']);
+                    $wheres=[];
+                    foreach ($option['where'] as $item){
+                        if(is_array($item)){
+                            $wheres[]= implode('', $item);
+                        }
+                    }
                     $option['where'] = implode(' AND ', $wheres);
                 }
                 $params->setFilter(str_replace('<>', '!=', $option['where']));
